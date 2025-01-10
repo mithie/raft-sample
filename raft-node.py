@@ -99,9 +99,9 @@ class RaftNode:
             app.router.add_post('/vote', self.handle_vote_request)
             runner = web.AppRunner(app)
             await runner.setup()
-            site = web.TCPSite(runner, '0.0.0.0', 8000 + self.node_id)
+            site = web.TCPSite(runner, node_mapping[self.node_id], 8000 + self.node_id)
             await site.start()
-            logger.debug(f"Node {self.node_id} running at http://0.0.0.0:{8000 + self.node_id}")
+            logger.debug(f"Node {self.node_id} running at http://{node_mapping[self.node_id]}:{8000 + self.node_id}")
             await asyncio.Event().wait()             
         except Exception as e:
             logger.debug(f"Error creating server: {e}")
