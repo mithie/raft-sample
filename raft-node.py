@@ -39,15 +39,18 @@ class RaftNode:
             votes = 1
 
             async def request_vote(node):
+                logger.debug(f"Attempting to request vote from {node}")
                 try:
                     async with aiohttp.ClientSession() as session:
-                        async with session.post(f'http:/{node}/vote', json={
+                        async with session.post(f'http://{node}/vote', json={
                             "term": self.current_term,
                             "candidate_id": self.node_id
                         }) as response:
+                            logger.debug(f"Vote request to {node} responded with {response.status}")
                             if response.status == 200:
                                 data = await response.json()
                                 if data['candidate_id'] == self.node_id:
+                                    logger.debug(f"Vote granted by {node}")
                                     nonlocal votes
                                     votes += 1
                 except Exception as e:
@@ -99,9 +102,9 @@ class RaftNode:
             app.router.add_post('/vote', self.handle_vote_request)
             runner = web.AppRunner(app)
             await runner.setup()
-            site = web.TCPSite(runner, node_mapping[self.node_id], 8000 + self.node_id)
+            site = web.TCPSite(runner, '0.0.0.0', 8000 + self.node_id)
             await site.start()
-            logger.debug(f"Node {self.node_id} running at http://{node_mapping[self.node_id]}:{8000 + self.node_id}")
+            logger.debug(f"Node {self.node_id} running at http://0.0.0.0:{8000 + self.node_id}")
             await asyncio.Event().wait()             
         except Exception as e:
             logger.debug(f"Error creating server: {e}")
