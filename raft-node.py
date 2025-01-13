@@ -86,7 +86,6 @@ class RaftNode:
         logger.debug(f"Sending empty append entry to Node: {node}")
 
         try:
-
             async with aiohttp.ClientSession() as session:
                 async with session.post(f'http://{node}/append_entries', json={
                     "term": self.current_term,
@@ -107,6 +106,8 @@ class RaftNode:
         data = await request.json()
         term = data['term']
         leader_id = data["leader_id"]
+
+        logger.debug(f"In method handle_append_entries, data: {data}")
         
         if self.current_term > term:
             return web.json_response({"term": self.current_term, "success": False})
@@ -150,7 +151,7 @@ class RaftNode:
         try:
             app = web.Application()
             app.router.add_post('/vote', self.handle_vote_request)
-            app.router.add_post('/send_append_entries', self.handle_append_entries)
+            app.router.add_post('/append_entries', self.handle_append_entries)
             runner = web.AppRunner(app)
             await runner.setup()
             site = web.TCPSite(runner, '0.0.0.0', 8000 + self.node_id)
